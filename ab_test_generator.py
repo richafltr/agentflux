@@ -172,11 +172,11 @@ class ABTestGenerator:
         # Step 2: Generate new React code for the variation
         variation_react_code = await self._generate_variation_react_code(modified_components, pattern)
         
-        # Step 3: Create image generation prompt for GPT-Image-1
-        image_prompt = self._create_image_prompt(component_map, pattern, modified_components)
+        # Step 3: Create image modification prompt for GPT-Image-1
+        image_prompt = self._create_image_modification_prompt(component_map, pattern, modified_components)
         
-        # Step 4: Generate variation image
-        variation_image = await self._generate_variation_image(image_prompt)
+        # Step 4: Generate variation image using original screenshot + modifications
+        variation_image = await self._generate_variation_image_with_screenshot(component_map, image_prompt, pattern)
         
         # Step 5: Create variation package
         variation = {
@@ -187,7 +187,7 @@ class ABTestGenerator:
             "key_changes": pattern["key_changes"],
             "modified_components": modified_components,
             "react_code": variation_react_code,
-            "dalle_prompt": dalle_prompt,
+            "image_prompt": image_prompt,
             "generated_image": variation_image,
             "expected_improvements": self._get_expected_improvements(pattern_id)
         }
@@ -279,52 +279,163 @@ class ABTestGenerator:
         
         return response.choices[0].message.content
     
-    def _create_image_prompt(self, component_map: Dict[str, Any], pattern: Dict[str, Any], modified_components: Dict[str, Any]) -> str:
-        """Create prompt for generating variation images with GPT-Image-1"""
+    def _create_image_modification_prompt(self, component_map: Dict[str, Any], pattern: Dict[str, Any], modified_components: Dict[str, Any]) -> str:
+        """Create modification prompt for GPT-Image-1 to transform the original screenshot"""
         
-        # Extract key visual elements from original analysis
-        original_colors = self._extract_colors(component_map)
-        original_typography = self._extract_typography(component_map)
+        # Get specific layout instructions based on pattern
+        layout_instructions = self._get_pattern_layout_instructions(pattern)
         
-        image_prompt = f"""
-        Create a modern, professional website landing page design with these specifications:
+        modification_prompt = f"""
+        CRITICAL: Completely transform this website layout from centered design to a dramatic two-column layout.
         
-        LAYOUT PATTERN: {pattern['name']} - {pattern['description']}
+        TRANSFORMATION GOAL: {pattern['name']} - {pattern['layout_strategy']}
         
-        VISUAL STYLE:
-        - Color scheme: {original_colors}
-        - Typography: {original_typography}
-        - Modern, clean design aesthetic
-        - Professional business website
+        MANDATORY LAYOUT CHANGES:
+        {chr(10).join([f"• {change}" for change in pattern['key_changes']])}
         
-        LAYOUT REQUIREMENTS:
-        {chr(10).join([f"- {change}" for change in pattern['key_changes']])}
+        SPECIFIC REARRANGEMENT INSTRUCTIONS:
+        {layout_instructions}
         
-        SPECIFIC ELEMENTS:
-        - Header with navigation
-        - Hero section with clear value proposition
-        - Call-to-action buttons
-        - Feature highlights or benefits
-        - Social proof elements
-        - Footer section
+        EXACT POSITIONING REQUIREMENTS:
+        - Hero Section: {self._get_hero_positioning(pattern)}
+        - Navigation: {self._get_navigation_positioning(pattern)}
+        - Call-to-Action: {self._get_cta_positioning(pattern)}
+        - Content Layout: {self._get_content_positioning(pattern)}
         
-        STYLE: Clean, modern, professional, high-converting landing page design, flat design, minimal shadows, contemporary UI/UX
+        CRITICAL VISUAL TRANSFORMATION:
+        - COMPLETELY REMOVE the centered layout approach
+        - CREATE a clear 50/50 split between text and visual content
+        - MOVE all headline text to the LEFT side of the screen
+        - ADD a large product demo/dashboard mockup on the RIGHT side
+        - ENSURE the demo image shows an interface, dashboard, or application
+        - MAKE the layout look like a modern SaaS landing page (similar to Stripe, Notion, or Figma)
+        
+        DESIGN REQUIREMENTS:
+        - Maintain the original AgentOps branding and colors
+        - Keep the same text content but rearrange positioning
+        - Add visual depth with shadows and modern styling
+        - Ensure the demo image is engaging and professional
+        - Create clear visual hierarchy with left-aligned text
+        
+        RESULT: The final image should look dramatically different from the original - like a completely new layout with text on left and demo on right, not just minor adjustments to the centered design.
         """
         
-        return image_prompt
+        return modification_prompt
     
-    async def _generate_variation_image(self, image_prompt: str) -> Dict[str, Any]:
-        """Generate variation image using OpenAI native image generation (gpt-image-1)"""
+    def _get_pattern_layout_instructions(self, pattern: Dict[str, Any]) -> str:
+        """Get specific layout instructions for each A/B testing pattern"""
+        pattern_instructions = {
+            "1": """
+            CRITICAL: CREATE A DRAMATIC TWO-COLUMN LAYOUT TRANSFORMATION:
+            
+            LEFT COLUMN (50% width):
+            - Move ALL hero text content to the LEFT side of the screen
+            - Stack the headline, subheadline, and description vertically on the left
+            - Place call-to-action buttons below the text on the left side
+            - Add company logos/social proof at the bottom of left column
+            - Left-align all text content (not centered)
+            
+            RIGHT COLUMN (50% width):
+            - Create a large demo/dashboard mockup image on the RIGHT side
+            - Show a product interface, dashboard, or application screenshot
+            - Make this visual element take up the entire right half
+            - Add subtle shadows or modern styling to the demo image
+            
+            LAYOUT TRANSFORMATION:
+            - Split the hero section into two equal columns (50/50)
+            - Remove the centered layout completely
+            - Create clear visual separation between left text and right image
+            - Ensure the demo image is prominent and engaging
+            - Make the layout feel like a modern SaaS landing page
+            """,
+            "2": """
+            - Create a 3-column grid layout for main features
+            - Add multiple call-to-action buttons (one per feature)
+            - Make feature cards more prominent with icons or images
+            - Distribute content more evenly across the page
+            - Add hover effects and interactive elements
+            - Include multiple entry points for different user types
+            """,
+            "3": """
+            - Add more detailed descriptions and explanations
+            - Include an FAQ section or detailed product information
+            - Add testimonials, case studies, or social proof
+            - Create expandable sections for additional information
+            - Include comparison tables or feature lists
+            - Add educational content or how-it-works sections
+            """,
+            "4": """
+            - Add urgency indicators (limited time offers, countdown timers)
+            - Include social proof badges (customer count, ratings)
+            - Add trust signals (security badges, certifications)
+            - Create scarcity elements (limited availability)
+            - Include customer testimonials prominently
+            - Add risk-reduction elements (money-back guarantee, free trial)
+            """
+        }
+        return pattern_instructions.get(pattern.get('id', '1'), pattern_instructions['1'])
+    
+    def _get_hero_positioning(self, pattern: Dict[str, Any]) -> str:
+        """Get hero section positioning for the pattern"""
+        hero_positions = {
+            "1": "Two-column split layout: Left side text content, Right side demo/dashboard image",
+            "2": "Moderate size with grid elements below",
+            "3": "Smaller hero with more content sections",
+            "4": "Prominent with urgency elements and social proof"
+        }
+        return hero_positions.get(pattern.get('id', '1'), hero_positions['1'])
+    
+    def _get_navigation_positioning(self, pattern: Dict[str, Any]) -> str:
+        """Get navigation positioning for the pattern"""
+        nav_positions = {
+            "1": "Minimal, clean navigation with essential items only",
+            "2": "Standard navigation with multiple entry points",
+            "3": "Detailed navigation with more menu items",
+            "4": "Navigation with trust signals and contact info"
+        }
+        return nav_positions.get(pattern.get('id', '1'), nav_positions['1'])
+    
+    def _get_cta_positioning(self, pattern: Dict[str, Any]) -> str:
+        """Get call-to-action positioning for the pattern"""
+        cta_positions = {
+            "1": "Primary CTA button positioned in left column below the headline text",
+            "2": "Multiple CTAs distributed across feature sections",
+            "3": "CTAs placed after detailed explanations",
+            "4": "Prominent CTAs with urgency and social proof"
+        }
+        return cta_positions.get(pattern.get('id', '1'), cta_positions['1'])
+    
+    def _get_content_positioning(self, pattern: Dict[str, Any]) -> str:
+        """Get content positioning for the pattern"""
+        content_positions = {
+            "1": "Hero content split into left text column and right demo image, company logos below",
+            "2": "Grid-based content with equal visual weight",
+            "3": "Rich, detailed content with multiple sections",
+            "4": "Content focused on conversion with social proof"
+        }
+        return content_positions.get(pattern.get('id', '1'), content_positions['1'])
+    
+    async def _generate_variation_image_with_screenshot(self, component_map: Dict[str, Any], modification_prompt: str, pattern: Dict[str, Any]) -> Dict[str, Any]:
+        """Generate variation image using original screenshot as input with GPT-Image-1 edit API"""
         
         try:
             print("    🎨 Generating variation image with GPT-Image-1...")
             
-            response = await self.client.images.generate(
-                model="gpt-image-1",
-                prompt=image_prompt,
-                size="1024x1024",
-                n=1
-            )
+            # Get the original screenshot file path
+            original_screenshot_path = self._get_original_screenshot_path(component_map)
+            
+            if not original_screenshot_path:
+                print("    ⚠️  No original screenshot found, using text-only generation")
+                return await self._generate_text_only_variation(modification_prompt, pattern)
+            
+            # Use GPT-Image-1 edit API with screenshot input and modification prompt
+            with open(original_screenshot_path, 'rb') as img_file:
+                response = await self.client.images.edit(
+                    model="gpt-image-1",
+                    image=img_file,
+                    prompt=modification_prompt,
+                    size="1024x1024"
+                )
             
             # Get base64 image data directly
             image_b64 = response.data[0].b64_json
@@ -345,18 +456,105 @@ class ABTestGenerator:
             
             return {
                 "local_path": local_path,
-                "prompt": image_prompt,
+                "modification_prompt": modification_prompt,
+                "original_screenshot_used": True,
+                "original_screenshot_path": original_screenshot_path,
                 "generated_at": datetime.now().isoformat(),
-                "model": "gpt-image-1"
+                "model": "gpt-image-1",
+                "pattern": pattern['name']
             }
             
         except Exception as e:
             print(f"    ❌ Failed to generate variation image: {e}")
             return {
                 "error": str(e),
-                "prompt": image_prompt,
+                "modification_prompt": modification_prompt,
+                "generated_at": datetime.now().isoformat(),
+                "model": "gpt-image-1",
+                "pattern": pattern['name']
+            }
+    
+    def _get_original_screenshot_path(self, component_map: Dict[str, Any]) -> Optional[str]:
+        """Get original screenshot file path from component map"""
+        try:
+            # Look for screenshot paths in the component map
+            if 'segments' in component_map:
+                for segment in component_map['segments']:
+                    if 'screenshot_path' in segment and os.path.exists(segment['screenshot_path']):
+                        return segment['screenshot_path']
+            
+            # Fallback: look for screenshot files in common locations
+            screenshot_files = [
+                "screenshots/www.agentops.ai_.png",
+                "screenshots/segment_1_top.png",
+                "segment_1_top.png",
+                "screenshots/segment_2_quarter.png",
+                "segment_2_quarter.png"
+            ]
+            
+            for screenshot_file in screenshot_files:
+                if os.path.exists(screenshot_file):
+                    return screenshot_file
+            
+            return None
+            
+        except Exception as e:
+            print(f"    ⚠️  Could not find original screenshot: {e}")
+            return None
+    
+    async def _generate_text_only_variation(self, modification_prompt: str, pattern: Dict[str, Any]) -> Dict[str, Any]:
+        """Fallback: Generate variation using text-only prompt"""
+        
+        text_prompt = f"""
+        Create a modern website landing page design for A/B testing:
+        
+        PATTERN: {pattern['name']} - {pattern['description']}
+        
+        LAYOUT REQUIREMENTS:
+        {chr(10).join([f"• {change}" for change in pattern['key_changes']])}
+        
+        DESIGN SPECIFICATIONS:
+        - Professional business website aesthetic
+        - Modern, clean design with good conversion potential
+        - Clear visual hierarchy and user flow
+        - Responsive design principles
+        - High-converting landing page layout
+        
+        STYLE: Clean, modern, professional website design, flat design, minimal shadows, contemporary UI/UX, optimized for conversions
+        """
+        
+        try:
+            response = await self.client.images.generate(
+                model="gpt-image-1",
+                prompt=text_prompt,
+                size="1024x1024",
+                n=1
+            )
+            
+            image_b64 = response.data[0].b64_json
+            import base64
+            image_bytes = base64.b64decode(image_b64)
+            
+            os.makedirs("variations", exist_ok=True)
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            local_path = f"variations/variation_text_{timestamp}.png"
+            
+            with open(local_path, 'wb') as f:
+                f.write(image_bytes)
+            
+            return {
+                "local_path": local_path,
+                "text_prompt": text_prompt,
+                "method": "text_only_fallback",
                 "generated_at": datetime.now().isoformat(),
                 "model": "gpt-image-1"
+            }
+            
+        except Exception as e:
+            return {
+                "error": str(e),
+                "method": "text_only_fallback",
+                "generated_at": datetime.now().isoformat()
             }
     
     def _extract_colors(self, component_map: Dict[str, Any]) -> str:
