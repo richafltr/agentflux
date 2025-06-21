@@ -207,3 +207,5 @@ results/**/*
 !results/**/
 screenshots/**/*
 !screenshots/**/
+variations/**/*
+!variations/**/
