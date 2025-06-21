@@ -199,6 +199,8 @@ enhanced_analysis/**/*
 !enhanced_analysis/**/
 enhanced_analysis_v2/**/*
 !enhanced_analysis_v2/**/
+enhanced_analysis_v3/**/*
+!enhanced_analysis_v3/**/
 generated_images/**/*
 !generated_images/**/
 results/**/*
