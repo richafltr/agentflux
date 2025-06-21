@@ -428,13 +428,20 @@ class ABTestGenerator:
                 print("    ⚠️  No original screenshot found, using text-only generation")
                 return await self._generate_text_only_variation(modification_prompt, pattern)
             
-            # Use GPT-Image-1 edit API with screenshot input and modification prompt
+            # Get original screenshot dimensions for optimal sizing
+            original_width, original_height = self._get_screenshot_dimensions(original_screenshot_path)
+            optimal_size = self._get_optimal_generation_size(original_width, original_height)
+            
+            # Enhance the prompt with design-centric instructions
+            design_enhanced_prompt = self._add_design_preservation_instructions(modification_prompt, original_width, original_height)
+            
+            # Use GPT-Image-1 edit API with screenshot input and enhanced prompt
             with open(original_screenshot_path, 'rb') as img_file:
                 response = await self.client.images.edit(
                     model="gpt-image-1",
                     image=img_file,
-                    prompt=modification_prompt,
-                    size="1024x1024"
+                    prompt=design_enhanced_prompt,
+                    size=optimal_size
                 )
             
             # Get base64 image data directly
@@ -456,9 +463,11 @@ class ABTestGenerator:
             
             return {
                 "local_path": local_path,
-                "modification_prompt": modification_prompt,
+                "modification_prompt": design_enhanced_prompt,
                 "original_screenshot_used": True,
                 "original_screenshot_path": original_screenshot_path,
+                "original_dimensions": f"{original_width}x{original_height}",
+                "generated_size": optimal_size,
                 "generated_at": datetime.now().isoformat(),
                 "model": "gpt-image-1",
                 "pattern": pattern['name']
@@ -469,6 +478,7 @@ class ABTestGenerator:
             return {
                 "error": str(e),
                 "modification_prompt": modification_prompt,
+                "original_screenshot_path": original_screenshot_path if 'original_screenshot_path' in locals() else None,
                 "generated_at": datetime.now().isoformat(),
                 "model": "gpt-image-1",
                 "pattern": pattern['name']
@@ -501,6 +511,96 @@ class ABTestGenerator:
         except Exception as e:
             print(f"    ⚠️  Could not find original screenshot: {e}")
             return None
+    
+    def _get_screenshot_dimensions(self, screenshot_path: str) -> tuple[int, int]:
+        """Get dimensions of the original screenshot"""
+        try:
+            from PIL import Image
+            with Image.open(screenshot_path) as img:
+                return img.size  # Returns (width, height)
+        except Exception as e:
+            print(f"    ⚠️  Could not get screenshot dimensions: {e}")
+            return (1365, 768)  # Default web dimensions
+    
+    def _get_optimal_generation_size(self, original_width: int, original_height: int) -> str:
+        """Get the best GPT-Image-1 size that matches the original aspect ratio"""
+        aspect_ratio = original_width / original_height
+        
+        # Available GPT-Image-1 sizes
+        available_sizes = {
+            "1536x1024": (1536, 1024, 1.5),           # Landscape 3:2 - BEST for desktop
+            "1024x1024": (1024, 1024, 1.0),           # Square
+            "1024x1536": (1024, 1536, 0.667),         # Portrait 2:3 - mobile-like
+        }
+        
+        # For desktop screenshots (width > height), prioritize landscape
+        if original_width > original_height:
+            print(f"    💻 Desktop layout detected (width > height)")
+            print(f"    📐 Original: {original_width}x{original_height} (ratio: {aspect_ratio:.2f})")
+            print(f"    📐 Using landscape format: 1536x1024 for desktop view")
+            return "1536x1024"
+        
+        # For other cases, find the closest aspect ratio
+        best_size = "1024x1024"
+        best_diff = float('inf')
+        
+        for size_name, (width, height, ratio) in available_sizes.items():
+            diff = abs(aspect_ratio - ratio)
+            if diff < best_diff:
+                best_diff = diff
+                best_size = size_name
+        
+        print(f"    📐 Original: {original_width}x{original_height} (ratio: {aspect_ratio:.2f})")
+        print(f"    📐 Using GPT-Image-1 size: {best_size}")
+        
+        return best_size
+    
+    def _add_design_preservation_instructions(self, modification_prompt: str, original_width: int, original_height: int) -> str:
+        """Add design-centric instructions to preserve the natural flow and organic feel"""
+        
+        design_instructions = f"""
+        DESIGN PRESERVATION REQUIREMENTS:
+        
+        MAINTAIN NATURAL FLOW:
+        - Preserve the organic, natural layout flow of the original design
+        - Keep the same visual rhythm and spacing patterns
+        - Maintain consistent margins, padding, and whitespace relationships
+        - Preserve the natural reading flow and visual hierarchy
+        
+        AVOID ARTIFICIAL CROPPING:
+        - Do NOT crop or cut off any content areas
+        - Maintain the full webpage context and structure
+        - Keep all navigation, footer, and peripheral elements intact
+        - Preserve the natural boundaries and content areas
+        
+        DESIGNER-QUALITY EXECUTION:
+        - Apply changes like a professional UI/UX designer would
+        - Maintain pixel-perfect alignment and spacing
+        - Preserve the original design system's consistency
+        - Keep typography scale and color harmony intact
+        - Ensure smooth, natural transitions between sections
+        
+        ORIGINAL DIMENSIONS CONTEXT:
+        - Original screenshot: {original_width}x{original_height} pixels
+        - Maintain proportional relationships from the original
+        - Scale elements appropriately to preserve visual balance
+        
+        LAYOUT TRANSFORMATION APPROACH:
+        - Rearrange components smoothly without disrupting the overall design flow
+        - Maintain the professional, polished appearance
+        - Keep the design feeling cohesive and intentional
+        - Preserve the brand's visual identity and aesthetic
+        
+        {modification_prompt}
+        
+        FINAL QUALITY CHECK:
+        - The result should look like a professionally designed alternative layout
+        - No elements should appear cropped, cut off, or artificially constrained
+        - The design should feel natural and organic, not forced or mechanical
+        - All content should be fully visible and properly integrated
+        """
+        
+        return design_instructions
     
     async def _generate_text_only_variation(self, modification_prompt: str, pattern: Dict[str, Any]) -> Dict[str, Any]:
         """Fallback: Generate variation using text-only prompt"""
