@@ -28,7 +28,7 @@ async def test_enhanced_workflow():
         print("   2. Analyze each component individually") 
         print("   3. Generate React code for each component")
         print("   4. Create A/B testing variations")
-        print("   5. Generate DALL-E images for variations")
+        print("   5. Generate GPT-Image-1 images for variations")
         print()
         
         # Run with pattern 1 (Hero-First Layout) for testing

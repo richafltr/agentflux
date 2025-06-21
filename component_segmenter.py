@@ -20,7 +20,6 @@ class ComponentSegmenter:
     
     def __init__(self):
         self.config = Config()
-        self.screenshot_service = ScreenshotService()
         self.vision_analyzer = VisionAnalyzer()
         
     async def segment_and_analyze(self, url: str) -> Dict[str, Any]:
@@ -32,24 +31,26 @@ class ComponentSegmenter:
         """
         print(f"🔄 Starting component segmentation for: {url}")
         
-        # Step 1: Capture full page screenshot with scroll segments
-        scroll_segments = await self._capture_scroll_segments(url)
-        
-        # Step 2: Analyze each segment individually
-        component_analyses = await self._analyze_segments(scroll_segments)
-        
-        # Step 3: Generate React code for each component
-        react_components = await self._generate_react_code(component_analyses)
-        
-        # Step 4: Create component map structure
-        component_map = self._create_component_map(
-            url, scroll_segments, component_analyses, react_components
-        )
-        
-        print(f"✅ Segmentation complete! Generated {len(scroll_segments)} components")
-        return component_map
+        # Use ScreenshotService as async context manager
+        async with ScreenshotService() as screenshot_service:
+            # Step 1: Capture full page screenshot with scroll segments
+            scroll_segments = await self._capture_scroll_segments(url, screenshot_service)
+            
+            # Step 2: Analyze each segment individually
+            component_analyses = await self._analyze_segments(scroll_segments)
+            
+            # Step 3: Generate React code for each component
+            react_components = await self._generate_react_code(component_analyses)
+            
+            # Step 4: Create component map structure
+            component_map = self._create_component_map(
+                url, scroll_segments, component_analyses, react_components
+            )
+            
+            print(f"✅ Segmentation complete! Generated {len(scroll_segments)} components")
+            return component_map
     
-    async def _capture_scroll_segments(self, url: str) -> List[Dict[str, Any]]:
+    async def _capture_scroll_segments(self, url: str, screenshot_service: ScreenshotService) -> List[Dict[str, Any]]:
         """Capture 4 scroll segments of the webpage"""
         print("📸 Capturing scroll segments...")
         
@@ -60,7 +61,7 @@ class ComponentSegmenter:
             segment_name = f"segment_{i+1}_{['top', 'quarter', 'half', 'bottom'][i]}"
             
             # Capture screenshot at specific scroll position
-            screenshot_path = await self.screenshot_service.capture_with_scroll(
+            screenshot_path = await screenshot_service.capture_with_scroll(
                 url, scroll_position=scroll_pos, filename=f"{segment_name}.png"
             )
             

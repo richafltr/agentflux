@@ -209,7 +209,7 @@ Examples:
     parser.add_argument(
         "--no-images",
         action="store_true",
-        help="Skip DALL-E image generation (faster, less cost)"
+        help="Skip GPT-Image-1 image generation (faster, less cost)"
     )
     
     args = parser.parse_args()
