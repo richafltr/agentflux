@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Enhanced AgentFlux - AI Design System Analyzer with A/B Testing Generator
-Complete workflow: Screenshot → Component Segmentation → React Code → A/B Variations → Image Generation
+Complete workflow: Screenshot → Component Segmentation → React Code → A/B Variations → Image Generation → Stylization
 """
 
 import asyncio
@@ -14,20 +14,24 @@ import agentops
 from component_segmenter import ComponentSegmenter
 from ab_test_generator import ABTestGenerator
 from screenshot_service import ScreenshotService
+from stylizer import VariationStylizer
 
 
 class EnhancedAgentFlux:
-    """Enhanced AgentFlux with component segmentation and A/B testing"""
+    """Enhanced AgentFlux with component segmentation, A/B testing, and stylization"""
 
     def __init__(self):
         self.segmenter = ComponentSegmenter()
         self.ab_generator = ABTestGenerator()
+        self.stylizer = None  # Initialize only if stylization is requested
 
     async def run_complete_analysis(
         self,
         url: str,
         ab_pattern: Optional[str] = None,
-        output_dir: str = "enhanced_analysis"
+        output_dir: str = "enhanced_analysis",
+        apply_styles: bool = False,
+        style_names: Optional[list] = None
     ) -> dict:
         """
         Run the complete enhanced analysis workflow
@@ -36,6 +40,8 @@ class EnhancedAgentFlux:
             url: Website URL to analyze
             ab_pattern: A/B testing pattern (1-4) or None for interactive selection
             output_dir: Output directory for all results
+            apply_styles: Whether to apply style presets to variations
+            style_names: Optional list of specific style names to apply
 
         Returns:
             Complete analysis results
@@ -44,6 +50,8 @@ class EnhancedAgentFlux:
         print("=" * 60)
         print(f"🎯 Target URL: {url}")
         print(f"📁 Output Directory: {output_dir}")
+        if apply_styles:
+            print(f"🎨 Style Application: Enabled")
         print("=" * 60)
 
         # Create output directory
@@ -80,11 +88,42 @@ class EnhancedAgentFlux:
             )
             print(f"✅ A/B test package saved: {ab_test_file}")
 
-            # Step 3: Generate Summary Report
-            print("\n📊 STEP 3: Generating Summary Report")
+            # Step 3: Apply Style Presets (if requested)
+            stylization_results = None
+            if apply_styles:
+                print("\n🎨 STEP 3: Applying Style Presets with Replicate")
+                print("-" * 40)
+
+                # Initialize stylizer if not already done
+                if self.stylizer is None:
+                    try:
+                        self.stylizer = VariationStylizer()
+                    except ValueError as e:
+                        print(f"⚠️  Stylization skipped: {e}")
+                        print(
+                            "   Please set REPLICATE_API_TOKEN environment variable to enable stylization")
+                        apply_styles = False
+
+                if apply_styles:
+                    stylization_results = await self.stylizer.stylize_all_variations(
+                        ab_test_package,
+                        output_dir=os.path.join(
+                            output_dir, "stylized_variations"),
+                        styles_to_apply=style_names
+                    )
+
+                    # Create style gallery
+                    gallery_path = os.path.join(
+                        output_dir, "stylized_variations", "style_gallery.html")
+                    await self.stylizer.create_style_gallery(stylization_results, gallery_path)
+                    print(f"✅ Style gallery created: {gallery_path}")
+
+            # Step 4: Generate Summary Report
+            step_number = 4 if apply_styles else 3
+            print(f"\n📊 STEP {step_number}: Generating Summary Report")
             print("-" * 40)
             summary = self._generate_summary_report(
-                component_map, ab_test_package)
+                component_map, ab_test_package, stylization_results)
 
             summary_file = os.path.join(output_dir, "analysis_summary.json")
             with open(summary_file, 'w') as f:
@@ -92,12 +131,13 @@ class EnhancedAgentFlux:
 
             print(f"✅ Summary report saved: {summary_file}")
 
-            # Step 4: Display Results
+            # Step 5: Display Results
             self._display_results(summary)
 
             return {
                 "component_analysis": component_map,
                 "ab_test_package": ab_test_package,
+                "stylization_results": stylization_results,
                 "summary": summary,
                 "output_directory": output_dir
             }
@@ -106,7 +146,7 @@ class EnhancedAgentFlux:
             print(f"❌ Analysis failed: {str(e)}")
             raise
 
-    def _generate_summary_report(self, component_map: dict, ab_test_package: dict) -> dict:
+    def _generate_summary_report(self, component_map: dict, ab_test_package: dict, stylization_results: Optional[dict] = None) -> dict:
         """Generate a comprehensive summary report"""
 
         # Count quality improvements
@@ -121,11 +161,11 @@ class EnhancedAgentFlux:
                 if variation["generated_image"].get("quality_improved", False):
                     quality_improvements += 1
 
-        return {
+        summary = {
             "metadata": {
                 "analysis_timestamp": datetime.now().isoformat(),
                 "url": component_map["metadata"]["url"],
-                "tool_version": "Enhanced AgentFlux v2.0 with Quality Assurance"
+                "tool_version": "Enhanced AgentFlux v3.0 with Quality Assurance & Stylization"
             },
             "component_analysis": {
                 "total_segments": component_map["metadata"]["total_segments"],
@@ -154,6 +194,24 @@ class EnhancedAgentFlux:
             ]
         }
 
+        # Add stylization information if available
+        if stylization_results:
+            total_stylized = 0
+            for var_data in stylization_results.get("stylized_variations", {}).values():
+                successful = [s for s in var_data.get(
+                    "stylized_images", []) if "output_path" in s]
+                total_stylized += len(successful)
+
+            summary["stylization"] = {
+                "styles_applied": stylization_results["metadata"]["total_styles"],
+                "total_stylized_images": total_stylized,
+                "gallery_created": True
+            }
+            summary["deliverables"]["stylized_variations"] = "✅ Generated"
+            summary["deliverables"]["style_gallery"] = "✅ Created"
+
+        return summary
+
     def _display_results(self, summary: dict):
         """Display analysis results in a beautiful format"""
 
@@ -181,6 +239,15 @@ class EnhancedAgentFlux:
             print(
                 f"   • Quality improvements applied: {summary['ab_testing']['quality_improvements_applied']}")
 
+        if 'stylization' in summary:
+            print(f"\n🎨 STYLIZATION:")
+            print(
+                f"   • Styles applied: {summary['stylization']['styles_applied']}")
+            print(
+                f"   • Total stylized images: {summary['stylization']['total_stylized_images']}")
+            print(
+                f"   • Gallery created: {'Yes' if summary['stylization']['gallery_created'] else 'No'}")
+
         print(f"\n📦 DELIVERABLES:")
         for item, status in summary['deliverables'].items():
             print(f"   • {item.replace('_', ' ').title()}: {status}")
@@ -192,6 +259,8 @@ class EnhancedAgentFlux:
         print("\n" + "=" * 60)
         print("🎯 Your enhanced design system analysis is ready!")
         print("   ✨ Now with automated quality checks and improvements!")
+        if 'stylization' in summary:
+            print("   🎨 Plus 20 unique stylized variations for each A/B test!")
         print("   Use the generated React components and A/B test variations")
         print("   to implement and test your optimized website designs.")
         print("=" * 60)
@@ -203,7 +272,7 @@ async def main():
     agentops.init(tags=["agentops-design-system-analyzer"])
 
     parser = argparse.ArgumentParser(
-        description="Enhanced AgentFlux - AI Design System Analyzer with A/B Testing",
+        description="Enhanced AgentFlux - AI Design System Analyzer with A/B Testing & Stylization",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
@@ -215,6 +284,12 @@ Examples:
   
   # Generate all A/B variations
   python main_enhanced.py https://www.figma.com --ab-pattern all
+  
+  # Generate with stylized variations (all 20 styles)
+  python main_enhanced.py https://www.notion.so --stylize
+  
+  # Generate with specific styles only
+  python main_enhanced.py https://www.vercel.com --stylize --styles "Neo-Brutalism,Glassmorphism,Dark Luxury"
   
   # Custom output directory
   python main_enhanced.py https://www.notion.so --output custom_analysis
@@ -244,11 +319,29 @@ Examples:
         help="Skip GPT-Image-1 image generation (faster, less cost)"
     )
 
+    parser.add_argument(
+        "--stylize",
+        action="store_true",
+        help="Apply style presets to variations using Replicate (requires REPLICATE_API_TOKEN)"
+    )
+
+    parser.add_argument(
+        "--styles",
+        type=str,
+        help="Comma-separated list of style names to apply (e.g., 'Neo-Brutalism,Glassmorphism'). If not specified, all 20 styles will be applied."
+    )
+
     args = parser.parse_args()
 
     # Validate URL
     if not args.url.startswith(('http://', 'https://')):
         args.url = 'https://' + args.url
+
+    # Parse style names if provided
+    style_names = None
+    if args.styles:
+        style_names = [s.strip() for s in args.styles.split(',')]
+        print(f"📋 Selected styles: {', '.join(style_names)}")
 
     # Initialize Enhanced AgentFlux
     enhanced_flux = EnhancedAgentFlux()
@@ -258,7 +351,9 @@ Examples:
         results = await enhanced_flux.run_complete_analysis(
             url=args.url,
             ab_pattern=args.ab_pattern,
-            output_dir=args.output
+            output_dir=args.output,
+            apply_styles=args.stylize,
+            style_names=style_names
         )
 
         print(f"\n✅ Analysis completed successfully!")
