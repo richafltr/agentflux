@@ -1,0 +1,68 @@
+{
+  "analysis": {
+    "Buttons & Calls-to-Action": {
+      "Primary, secondary, tertiary button styles": {
+        "primaryButton": {
+          "backgroundColor": "#6C63FF",
+          "textColor": "#FFFFFF",
+          "borderRadius": "8px",
+          "padding": "12px 24px",
+          "fontSize": "16px",
+          "fontWeight": "600",
+          "hoverState": {
+            "backgroundColor": "#5A54E6"
+          }
+        },
+        "secondaryButton": {
+          "backgroundColor": "#FFFFFF",
+          "textColor": "#6C63FF",
+          "border": "2px solid #6C63FF",
+          "borderRadius": "8px",
+          "padding": "12px 24px",
+          "fontSize": "16px",
+          "fontWeight": "600",
+          "hoverState": {
+            "backgroundColor": "#F0F0FF"
+          }
+        }
+      },
+      "Padding, min-width & height, corner radius": "Padding: 12px 24px, Radius: 8px",
+      "Text style (size, weight, letter-spacing)": "Size: 16px, Weight: 600",
+      "State styles: default, hover, active, focus, disabled": {
+        "backgroundColor": "#5A54E6"
+      }
+    },
+    "Typography": "Analysis not available for Typography category",
+    "Color & Contrast": "Analysis not available for Color & Contrast category",
+    "Layout & Grid System": "Analysis not available for Layout & Grid System category",
+    "Spacing & Sizing Tokens": "Analysis not available for Spacing & Sizing Tokens category",
+    "Imagery": "Analysis not available for Imagery category",
+    "Illustration & Iconography": "Analysis not available for Illustration & Iconography category",
+    "Logo Usage": "Analysis not available for Logo Usage category",
+    "Form & Input Styling": "Analysis not available for Form & Input Styling category",
+    "Navigation & Header": "Analysis not available for Navigation & Header category",
+    "Cards / Panels / Containers": "Analysis not available for Cards / Panels / Containers category",
+    "Shadows & Elevation": "Analysis not available for Shadows & Elevation category",
+    "Borders & Dividers": "Analysis not available for Borders & Dividers category",
+    "Motion & Animation": "Analysis not available for Motion & Animation category",
+    "Micro-Interactions": "Analysis not available for Micro-Interactions category",
+    "Media Blocks (Video / Audio / 3-D)": "Analysis not available for Media Blocks (Video / Audio / 3-D) category",
+    "Backgrounds": "Analysis not available for Backgrounds category",
+    "Dark-Mode / High-Contrast Variants": "Analysis not available for Dark-Mode / High-Contrast Variants category",
+    "Accessibility Visuals": "Analysis not available for Accessibility Visuals category",
+    "Data-Viz & Infographics": "Analysis not available for Data-Viz & Infographics category",
+    "Cursors & Pointer States": "Analysis not available for Cursors & Pointer States category",
+    "Tone & Mood Descriptors": "Analysis not available for Tone & Mood Descriptors category",
+    "Reusable Brand Motifs": "Analysis not available for Reusable Brand Motifs category",
+    "Favicons & Social Preview Assets": "Analysis not available for Favicons & Social Preview Assets category"
+  },
+  "url": "https://www.agentops.ai/",
+  "screenshot_path": "screenshots/www.agentops.ai_.png",
+  "analysis_type": "desktop_only",
+  "metadata": {
+    "analysis_timestamp": "2025-06-21T14:37:50.183341",
+    "multi_stage_analysis": false,
+    "include_mobile": false,
+    "tool_version": "1.0.0"
+  }
+}
