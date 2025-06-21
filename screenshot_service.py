@@ -89,6 +89,75 @@ class ScreenshotService:
         finally:
             await page.close()
     
+    async def capture_with_scroll(
+        self, 
+        url: str, 
+        scroll_position: float = 0.0,
+        filename: Optional[str] = None
+    ) -> str:
+        """
+        Capture a screenshot at a specific scroll position
+        
+        Args:
+            url: The website URL to capture
+            scroll_position: Scroll position as percentage (0.0 = top, 1.0 = bottom)
+            filename: Optional filename for saving
+            
+        Returns:
+            Path to saved screenshot file
+        """
+        if not self.browser:
+            raise RuntimeError("ScreenshotService not initialized.")
+        
+        page = await self.browser.new_page(
+            viewport={
+                'width': self.config.SCREENSHOT_WIDTH,
+                'height': self.config.SCREENSHOT_HEIGHT
+            }
+        )
+        
+        try:
+            # Navigate to the URL
+            await page.goto(url, timeout=self.config.SCREENSHOT_TIMEOUT)
+            await page.wait_for_load_state('networkidle')
+            await asyncio.sleep(2)
+            
+            # Get page dimensions for scroll calculation
+            page_height = await page.evaluate('document.body.scrollHeight')
+            viewport_height = await page.evaluate('window.innerHeight')
+            
+            # Calculate scroll position
+            max_scroll = max(0, page_height - viewport_height)
+            scroll_y = int(max_scroll * scroll_position)
+            
+            # Scroll to position
+            await page.evaluate(f'window.scrollTo(0, {scroll_y})')
+            await asyncio.sleep(1)  # Wait for scroll to complete
+            
+            # Take screenshot of current viewport
+            screenshot_bytes = await page.screenshot(
+                full_page=False,  # Only capture viewport
+                type='png'
+            )
+            
+            # Save screenshot
+            if not filename:
+                filename = f"scroll_{scroll_position:.2f}.png"
+            
+            output_path = Path("screenshots") / filename
+            output_path.parent.mkdir(parents=True, exist_ok=True)
+            
+            with open(output_path, 'wb') as f:
+                f.write(screenshot_bytes)
+            
+            return str(output_path)
+            
+        except Exception as e:
+            raise Exception(f"Failed to capture scroll screenshot: {str(e)}")
+        
+        finally:
+            await page.close()
+    
     async def capture_with_mobile_view(self, url: str) -> tuple[str, str]:
         """
         Capture both desktop and mobile views of a website

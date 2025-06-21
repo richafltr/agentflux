@@ -1,6 +1,6 @@
 """
 A/B Testing Generator
-Creates 4 different UI variations for A/B testing using component maps and DALL-E image generation
+Creates 4 different UI variations for A/B testing using component maps and GPT-Image-1 native image generation
 """
 
 import os
@@ -172,11 +172,11 @@ class ABTestGenerator:
         # Step 2: Generate new React code for the variation
         variation_react_code = await self._generate_variation_react_code(modified_components, pattern)
         
-        # Step 3: Create DALL-E prompt for image generation
-        dalle_prompt = self._create_dalle_prompt(component_map, pattern, modified_components)
+        # Step 3: Create image generation prompt for GPT-Image-1
+        image_prompt = self._create_image_prompt(component_map, pattern, modified_components)
         
         # Step 4: Generate variation image
-        variation_image = await self._generate_variation_image(dalle_prompt)
+        variation_image = await self._generate_variation_image(image_prompt)
         
         # Step 5: Create variation package
         variation = {
@@ -279,14 +279,14 @@ class ABTestGenerator:
         
         return response.choices[0].message.content
     
-    def _create_dalle_prompt(self, component_map: Dict[str, Any], pattern: Dict[str, Any], modified_components: Dict[str, Any]) -> str:
-        """Create DALL-E prompt for generating variation images"""
+    def _create_image_prompt(self, component_map: Dict[str, Any], pattern: Dict[str, Any], modified_components: Dict[str, Any]) -> str:
+        """Create prompt for generating variation images with GPT-Image-1"""
         
         # Extract key visual elements from original analysis
         original_colors = self._extract_colors(component_map)
         original_typography = self._extract_typography(component_map)
         
-        dalle_prompt = f"""
+        image_prompt = f"""
         Create a modern, professional website landing page design with these specifications:
         
         LAYOUT PATTERN: {pattern['name']} - {pattern['description']}
@@ -311,54 +311,52 @@ class ABTestGenerator:
         STYLE: Clean, modern, professional, high-converting landing page design, flat design, minimal shadows, contemporary UI/UX
         """
         
-        return dalle_prompt
+        return image_prompt
     
-    async def _generate_variation_image(self, dalle_prompt: str) -> Dict[str, Any]:
-        """Generate variation image using DALL-E"""
+    async def _generate_variation_image(self, image_prompt: str) -> Dict[str, Any]:
+        """Generate variation image using OpenAI native image generation (gpt-image-1)"""
         
         try:
-            print("    🎨 Generating variation image with DALL-E...")
+            print("    🎨 Generating variation image with GPT-Image-1...")
             
             response = await self.client.images.generate(
-                model="dall-e-3",
-                prompt=dalle_prompt,
-                size="1792x1024",  # Landscape format for web layouts
-                quality="hd",
+                model="gpt-image-1",
+                prompt=image_prompt,
+                size="1024x1024",
                 n=1
             )
             
-            image_url = response.data[0].url
+            # Get base64 image data directly
+            image_b64 = response.data[0].b64_json
             
-            # Save image locally
-            import aiohttp
-            async with aiohttp.ClientSession() as session:
-                async with session.get(image_url) as resp:
-                    if resp.status == 200:
-                        image_data = await resp.read()
-                        
-                        # Create variations directory
-                        os.makedirs("variations", exist_ok=True)
-                        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-                        local_path = f"variations/variation_{timestamp}.png"
-                        
-                        with open(local_path, 'wb') as f:
-                            f.write(image_data)
-                        
-                        print(f"    ✅ Variation image saved: {local_path}")
-                        
-                        return {
-                            "url": image_url,
-                            "local_path": local_path,
-                            "prompt": dalle_prompt,
-                            "generated_at": datetime.now().isoformat()
-                        }
+            # Decode and save image locally
+            import base64
+            image_bytes = base64.b64decode(image_b64)
+            
+            # Create variations directory
+            os.makedirs("variations", exist_ok=True)
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            local_path = f"variations/variation_{timestamp}.png"
+            
+            with open(local_path, 'wb') as f:
+                f.write(image_bytes)
+            
+            print(f"    ✅ Variation image saved: {local_path}")
+            
+            return {
+                "local_path": local_path,
+                "prompt": image_prompt,
+                "generated_at": datetime.now().isoformat(),
+                "model": "gpt-image-1"
+            }
             
         except Exception as e:
             print(f"    ❌ Failed to generate variation image: {e}")
             return {
                 "error": str(e),
-                "prompt": dalle_prompt,
-                "generated_at": datetime.now().isoformat()
+                "prompt": image_prompt,
+                "generated_at": datetime.now().isoformat(),
+                "model": "gpt-image-1"
             }
     
     def _extract_colors(self, component_map: Dict[str, Any]) -> str:

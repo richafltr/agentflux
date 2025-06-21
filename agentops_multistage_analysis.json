@@ -1,0 +1,144 @@
+{
+  "analysis": {
+    "Color & Contrast": {
+      "Brand primaries, secondaries, accents (hex/RGB/HSL)": {
+        "hex": "#4A00E0",
+        "rgb": "rgb(74, 0, 224)"
+      },
+      "Neutral/gray scale set": {},
+      "Success, warning, error, info colors": {},
+      "Gradient definitions (angle, stops)": [
+        {
+          "startColor": "#4A00E0",
+          "endColor": "#8E2DE2",
+          "angle": "45deg"
+        }
+      ]
+    },
+    "Typography": {
+      "Primary, secondary & fallback font families (web-safe or web-hosted)": [
+        "Primary: Sans-serif (e.g., Helvetica, Arial)"
+      ],
+      "Weight spectrum to use (e.g., 300, 400, 600, 700)": [
+        700,
+        400
+      ],
+      "Heading sizes (H1-H6) with exact px/rem values": {
+        "heading1": "48px",
+        "heading2": "36px",
+        "heading3": "24px",
+        "body": "16px",
+        "small": "14px"
+      },
+      "Line-height & paragraph spacing rules": {
+        "heading1": "56px",
+        "heading2": "44px",
+        "heading3": "32px",
+        "body": "24px",
+        "small": "20px"
+      },
+      "Letter-spacing / tracking values by text role": {
+        "heading1": "0.5px",
+        "heading2": "0.25px",
+        "body": "0px"
+      }
+    },
+    "Layout & Grid System": {
+      "Maximum content width / full-bleed rules": "Not specified",
+      "Column count, gutter width, and margin specs": "12 columns, default gutters",
+      "Responsive breakpoints & how the grid adapts": {
+        "xs": "0px",
+        "sm": "576px",
+        "md": "768px",
+        "lg": "992px",
+        "xl": "1200px"
+      },
+      "Vertical rhythm unit (e.g., 4 px or 8 px scale)": "8px"
+    },
+    "Buttons & Calls-to-Action": {
+      "Primary, secondary, tertiary button styles": {
+        "primaryButton": {
+          "backgroundColor": "#6C63FF",
+          "textColor": "#FFFFFF",
+          "borderRadius": "8px",
+          "padding": "12px 24px",
+          "fontSize": "16px",
+          "hoverState": {
+            "backgroundColor": "#5A54E6"
+          }
+        },
+        "secondaryButton": {
+          "backgroundColor": "#FFFFFF",
+          "textColor": "#6C63FF",
+          "border": "2px solid #6C63FF",
+          "borderRadius": "8px",
+          "padding": "12px 24px",
+          "fontSize": "16px",
+          "hoverState": {
+            "backgroundColor": "#F0F0FF"
+          }
+        }
+      },
+      "Padding, min-width & height, corner radius": "Padding: 12px 24px, Radius: 8px",
+      "Text style (size, weight, letter-spacing)": "Size: 16px, Weight: default",
+      "State styles: default, hover, active, focus, disabled": {
+        "backgroundColor": "#5A54E6"
+      }
+    },
+    "Form & Input Styling": {
+      "inputField": {
+        "backgroundColor": "#FFFFFF",
+        "border": "1px solid #CCCCCC",
+        "borderRadius": "4px",
+        "padding": "10px",
+        "fontSize": "14px",
+        "focusState": {
+          "borderColor": "#6C63FF"
+        }
+      }
+    },
+    "Cards / Panels / Containers": {
+      "defaultCard": {
+        "backgroundColor": "#FFFFFF",
+        "borderRadius": "12px",
+        "boxShadow": "0 4px 8px rgba(0, 0, 0, 0.1)",
+        "padding": "20px",
+        "header": {
+          "fontSize": "18px",
+          "fontWeight": "bold"
+        },
+        "body": {
+          "fontSize": "14px",
+          "color": "#333333"
+        }
+      }
+    },
+    "Spacing & Sizing Tokens": "Analysis not available for Spacing & Sizing Tokens category",
+    "Imagery": "Analysis not available for Imagery category",
+    "Illustration & Iconography": "Analysis not available for Illustration & Iconography category",
+    "Logo Usage": "Analysis not available for Logo Usage category",
+    "Navigation & Header": "Analysis not available for Navigation & Header category",
+    "Shadows & Elevation": "Analysis not available for Shadows & Elevation category",
+    "Borders & Dividers": "Analysis not available for Borders & Dividers category",
+    "Motion & Animation": "Analysis not available for Motion & Animation category",
+    "Micro-Interactions": "Analysis not available for Micro-Interactions category",
+    "Media Blocks (Video / Audio / 3-D)": "Analysis not available for Media Blocks (Video / Audio / 3-D) category",
+    "Backgrounds": "Analysis not available for Backgrounds category",
+    "Dark-Mode / High-Contrast Variants": "Analysis not available for Dark-Mode / High-Contrast Variants category",
+    "Accessibility Visuals": "Analysis not available for Accessibility Visuals category",
+    "Data-Viz & Infographics": "Analysis not available for Data-Viz & Infographics category",
+    "Cursors & Pointer States": "Analysis not available for Cursors & Pointer States category",
+    "Tone & Mood Descriptors": "Analysis not available for Tone & Mood Descriptors category",
+    "Reusable Brand Motifs": "Analysis not available for Reusable Brand Motifs category",
+    "Favicons & Social Preview Assets": "Analysis not available for Favicons & Social Preview Assets category"
+  },
+  "url": "https://www.agentops.ai/",
+  "screenshot_path": "screenshots/www.agentops.ai_.png",
+  "analysis_type": "desktop_only",
+  "metadata": {
+    "analysis_timestamp": "2025-06-21T15:08:53.398682",
+    "multi_stage_analysis": true,
+    "include_mobile": false,
+    "tool_version": "1.0.0"
+  }
+}

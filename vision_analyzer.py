@@ -18,7 +18,8 @@ class VisionAnalyzer:
     async def analyze_screenshot(
         self, 
         base64_image: str, 
-        use_multi_stage: bool = True
+        use_multi_stage: bool = True,
+        custom_prompt: Optional[str] = None
     ) -> Dict[str, Any]:
         """
         Analyze a screenshot and extract comprehensive design metadata
@@ -26,12 +27,15 @@ class VisionAnalyzer:
         Args:
             base64_image: Base64 encoded screenshot
             use_multi_stage: Whether to use multi-stage analysis for better accuracy
+            custom_prompt: Optional custom prompt for specialized analysis
             
         Returns:
             Comprehensive design system analysis
         """
         try:
-            if use_multi_stage:
+            if custom_prompt:
+                return await self._custom_prompt_analysis(base64_image, custom_prompt)
+            elif use_multi_stage:
                 return await self._multi_stage_analysis(base64_image)
             else:
                 return await self._single_stage_analysis(base64_image)
@@ -256,6 +260,41 @@ class VisionAnalyzer:
             messages=messages,
             max_tokens=4000,
             temperature=0.1
+        )
+        
+        return self._parse_response(response.choices[0].message.content)
+    
+    async def _custom_prompt_analysis(self, base64_image: str, custom_prompt: str) -> Dict[str, Any]:
+        """Perform analysis with a custom prompt"""
+        
+        messages = [
+            {
+                "role": "system",
+                "content": self.prompts.get_system_prompt()
+            },
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "text",
+                        "text": custom_prompt
+                    },
+                    {
+                        "type": "image_url",
+                        "image_url": {
+                            "url": f"data:image/png;base64,{base64_image}",
+                            "detail": "high"
+                        }
+                    }
+                ]
+            }
+        ]
+        
+        response = await self.client.chat.completions.create(
+            model=self.config.OPENAI_MODEL,
+            messages=messages,
+            max_tokens=4000,
+            temperature=0.0
         )
         
         return self._parse_response(response.choices[0].message.content)
