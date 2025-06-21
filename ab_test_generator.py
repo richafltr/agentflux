@@ -1,6 +1,18 @@
 """
 A/B Testing Generator
 Creates 4 different UI variations for A/B testing using component maps and GPT-Image-1 native image generation
+
+RECENT ENHANCEMENTS:
+- Enhanced design preservation: Strict constraints to prevent color/style drift
+- Dimension optimization: Automatic landscape format selection for desktop layouts
+- Layout-only transformations: Focus on rearrangement without redesign
+- GPT-Image-1 integration: Direct screenshot editing with preservation instructions
+
+DIMENSION LIMITATIONS:
+- GPT-Image-1 only supports: 1024x1024, 1024x1536, 1536x1024
+- Cannot generate original dimensions like 1920x6179
+- Uses 1536x1024 landscape for desktop layouts (best available)
+- Focuses on hero section transformation within available space
 """
 
 import os
@@ -286,11 +298,11 @@ class ABTestGenerator:
         layout_instructions = self._get_pattern_layout_instructions(pattern)
         
         modification_prompt = f"""
-        CRITICAL: Completely transform this website layout from centered design to a dramatic two-column layout.
+        LAYOUT REARRANGEMENT TASK: Transform the hero section from centered to two-column layout while preserving ALL original design elements.
         
         TRANSFORMATION GOAL: {pattern['name']} - {pattern['layout_strategy']}
         
-        MANDATORY LAYOUT CHANGES:
+        MANDATORY LAYOUT CHANGES (POSITIONING ONLY):
         {chr(10).join([f"• {change}" for change in pattern['key_changes']])}
         
         SPECIFIC REARRANGEMENT INSTRUCTIONS:
@@ -302,22 +314,23 @@ class ABTestGenerator:
         - Call-to-Action: {self._get_cta_positioning(pattern)}
         - Content Layout: {self._get_content_positioning(pattern)}
         
-        CRITICAL VISUAL TRANSFORMATION:
-        - COMPLETELY REMOVE the centered layout approach
-        - CREATE a clear 50/50 split between text and visual content
-        - MOVE all headline text to the LEFT side of the screen
-        - ADD a large product demo/dashboard mockup on the RIGHT side
-        - ENSURE the demo image shows an interface, dashboard, or application
-        - MAKE the layout look like a modern SaaS landing page (similar to Stripe, Notion, or Figma)
+        LAYOUT TRANSFORMATION (PRESERVE ALL STYLING):
+        - SPLIT the hero section into left text column (50%) and right demo image (50%)
+        - MOVE the headline "Trace, Debug, & Deploy Reliable AI Agents" to LEFT side
+        - MOVE the description text to LEFT side below headline
+        - MOVE the CTA button to LEFT side below description
+        - ADD a dashboard/interface mockup on RIGHT side showing AgentOps platform
+        - KEEP all colors, fonts, styling, and branding identical to original
         
-        DESIGN REQUIREMENTS:
-        - Maintain the original AgentOps branding and colors
-        - Keep the same text content but rearrange positioning
-        - Add visual depth with shadows and modern styling
-        - Ensure the demo image is engaging and professional
-        - Create clear visual hierarchy with left-aligned text
+        CRITICAL DESIGN PRESERVATION:
+        - Use EXACT same purple/blue color scheme from original
+        - Use EXACT same fonts and typography from original
+        - Use EXACT same button styling and colors from original
+        - Keep EXACT same background colors and overall aesthetic
+        - Preserve the AgentOps logo and navigation exactly as shown
+        - Maintain the same professional, clean visual style
         
-        RESULT: The final image should look dramatically different from the original - like a completely new layout with text on left and demo on right, not just minor adjustments to the centered design.
+        RESULT: Should look like the same AgentOps website with hero content rearranged into two columns - identical styling, just different layout positioning.
         """
         
         return modification_prompt
@@ -537,7 +550,9 @@ class ABTestGenerator:
         if original_width > original_height:
             print(f"    💻 Desktop layout detected (width > height)")
             print(f"    📐 Original: {original_width}x{original_height} (ratio: {aspect_ratio:.2f})")
-            print(f"    📐 Using landscape format: 1536x1024 for desktop view")
+            print(f"    ⚠️  GPT-Image-1 limitation: Cannot generate {original_width}x{original_height}")
+            print(f"    📐 Using best available: 1536x1024 landscape for desktop view")
+            print(f"    🎯 Focusing on hero section transformation within available dimensions")
             return "1536x1024"
         
         # For other cases, find the closest aspect ratio
@@ -559,45 +574,59 @@ class ABTestGenerator:
         """Add design-centric instructions to preserve the natural flow and organic feel"""
         
         design_instructions = f"""
-        DESIGN PRESERVATION REQUIREMENTS:
+        CRITICAL DESIGN PRESERVATION - ZERO TOLERANCE FOR CHANGES:
         
-        MAINTAIN NATURAL FLOW:
-        - Preserve the organic, natural layout flow of the original design
-        - Keep the same visual rhythm and spacing patterns
-        - Maintain consistent margins, padding, and whitespace relationships
-        - Preserve the natural reading flow and visual hierarchy
+        ABSOLUTE COLOR PRESERVATION:
+        - Keep EXACT same background colors (light gray/white backgrounds)
+        - Keep EXACT same text colors (black text, purple accents)
+        - Keep EXACT same button colors (purple/blue gradients)
+        - Keep EXACT same brand colors throughout
+        - DO NOT change any color schemes, gradients, or hues
+        - DO NOT alter the visual color palette in any way
         
-        AVOID ARTIFICIAL CROPPING:
-        - Do NOT crop or cut off any content areas
-        - Maintain the full webpage context and structure
-        - Keep all navigation, footer, and peripheral elements intact
-        - Preserve the natural boundaries and content areas
+        ABSOLUTE TYPOGRAPHY PRESERVATION:
+        - Keep EXACT same fonts and font families
+        - Keep EXACT same font weights (bold headings, regular body text)
+        - Keep EXACT same font sizes and text hierarchy
+        - Keep EXACT same text styling and formatting
+        - DO NOT change typography or text appearance
         
-        DESIGNER-QUALITY EXECUTION:
-        - Apply changes like a professional UI/UX designer would
-        - Maintain pixel-perfect alignment and spacing
-        - Preserve the original design system's consistency
-        - Keep typography scale and color harmony intact
-        - Ensure smooth, natural transitions between sections
+        ABSOLUTE VISUAL STYLE PRESERVATION:
+        - Keep EXACT same shadows, borders, and visual effects
+        - Keep EXACT same spacing patterns and padding
+        - Keep EXACT same visual treatments and styling
+        - Keep EXACT same design system elements
+        - DO NOT alter the overall aesthetic or visual style
         
-        ORIGINAL DIMENSIONS CONTEXT:
-        - Original screenshot: {original_width}x{original_height} pixels
-        - Maintain proportional relationships from the original
-        - Scale elements appropriately to preserve visual balance
+        DIMENSION OPTIMIZATION FOR GPT-IMAGE-1:
+        - Original screenshot: {original_width}x{original_height} pixels (desktop full-page)
+        - GPT-Image-1 limitation: Cannot generate original dimensions
+        - CRITICAL: Use landscape 1536x1024 format to maximize desktop layout space
+        - Focus on the HERO SECTION and top portion of the page for transformation
+        - Ensure the two-column layout fits naturally within the generated dimensions
         
-        LAYOUT TRANSFORMATION APPROACH:
-        - Rearrange components smoothly without disrupting the overall design flow
-        - Maintain the professional, polished appearance
-        - Keep the design feeling cohesive and intentional
-        - Preserve the brand's visual identity and aesthetic
+        LAYOUT REARRANGEMENT ONLY:
+        - This is ONLY a component rearrangement, NOT a redesign
+        - Move existing elements to new positions without changing their appearance
+        - Split hero section into left text column and right demo image
+        - Preserve all original design elements exactly as they appear
+        - Focus transformation on the main hero/content area
+        
+        STRICT CONSTRAINTS:
+        - DO NOT change colors, fonts, or visual styling
+        - DO NOT redesign or recreate any elements  
+        - DO NOT alter the brand appearance or aesthetic
+        - DO NOT crop or cut off important content
+        - DO NOT change the overall professional appearance
         
         {modification_prompt}
         
-        FINAL QUALITY CHECK:
-        - The result should look like a professionally designed alternative layout
-        - No elements should appear cropped, cut off, or artificially constrained
-        - The design should feel natural and organic, not forced or mechanical
-        - All content should be fully visible and properly integrated
+        FINAL RESULT REQUIREMENTS:
+        - Should look like the same website with rearranged layout
+        - All colors, fonts, and styling should be identical to original
+        - Only the positioning and arrangement should be different
+        - Must maintain the AgentOps brand identity perfectly
+        - Should feel like a natural layout variation, not a different design
         """
         
         return design_instructions
