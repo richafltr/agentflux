@@ -11,9 +11,11 @@ from typing import Dict, List, Any, Optional
 from datetime import datetime
 import replicate
 import aiohttp
+from agentops.sdk.decorators import agent, tool
 from style_presets import STYLE_PRESETS, get_all_style_names
 
 
+@agent
 class VariationStylizer:
     """Create stylized versions of variation images using Replicate's flux-kontext-pro"""
 
@@ -33,6 +35,7 @@ class VariationStylizer:
 
         print("🎨 Initialized Variation Stylizer with Replicate")
 
+    @tool
     async def stylize_all_variations(
         self,
         ab_test_package: Dict[str, Any],
@@ -303,6 +306,7 @@ class VariationStylizer:
             f"   • Success rate: {(successful_styles/total_images*100):.1f}%")
         print("\n" + "=" * 60)
 
+    @tool
     async def create_style_gallery(
         self,
         stylization_results: Dict[str, Any],
@@ -432,6 +436,7 @@ class VariationStylizer:
 
 
 # Convenience function for command-line usage
+@tool
 async def stylize_from_ab_test_file(
     ab_test_file: str,
     output_dir: str = "stylized_variations",
