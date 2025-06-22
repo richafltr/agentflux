@@ -27,18 +27,21 @@ app = FastAPI(
 )
 
 # Create directories
-Path("results").mkdir(exist_ok=True)
-Path("screenshots").mkdir(exist_ok=True)
+Path("outputs/analyses").mkdir(parents=True, exist_ok=True)
+Path("outputs/screenshots").mkdir(parents=True, exist_ok=True)
 
 # Global analyzer instance
 analyzer = VisionAnalyzer()
 
 # Pydantic models
+
+
 class AnalysisRequest(BaseModel):
     url: HttpUrl
     include_mobile: bool = False
     save_screenshot: bool = True
     multi_stage: bool = True
+
 
 class AnalysisResponse(BaseModel):
     analysis_id: str
@@ -49,8 +52,10 @@ class AnalysisResponse(BaseModel):
     results: Optional[Dict[str, Any]] = None
     error: Optional[str] = None
 
+
 # In-memory storage for analysis results (use database in production)
 analysis_storage: Dict[str, AnalysisResponse] = {}
+
 
 @app.get("/", response_class=HTMLResponse)
 async def root():
@@ -316,13 +321,14 @@ async def root():
     </html>
     """
 
+
 @app.post("/api/analyze")
 async def start_analysis(request: AnalysisRequest, background_tasks: BackgroundTasks):
     """Start a new design analysis"""
-    
+
     # Generate analysis ID
     analysis_id = f"analysis_{datetime.now().strftime('%Y%m%d_%H%M%S_%f')}"
-    
+
     # Create analysis record
     analysis_record = AnalysisResponse(
         analysis_id=analysis_id,
@@ -330,9 +336,9 @@ async def start_analysis(request: AnalysisRequest, background_tasks: BackgroundT
         url=str(request.url),
         created_at=datetime.now().isoformat()
     )
-    
+
     analysis_storage[analysis_id] = analysis_record
-    
+
     # Start background analysis
     background_tasks.add_task(
         run_analysis,
@@ -342,43 +348,46 @@ async def start_analysis(request: AnalysisRequest, background_tasks: BackgroundT
         request.save_screenshot,
         request.multi_stage
     )
-    
+
     return {"analysis_id": analysis_id, "status": "processing"}
+
 
 @app.get("/api/analysis/{analysis_id}")
 async def get_analysis_status(analysis_id: str):
     """Get analysis status and results"""
-    
+
     if analysis_id not in analysis_storage:
         raise HTTPException(status_code=404, detail="Analysis not found")
-    
+
     return analysis_storage[analysis_id]
+
 
 @app.get("/api/analysis/{analysis_id}/download")
 async def download_analysis_results(analysis_id: str):
     """Download analysis results as JSON file"""
-    
+
     if analysis_id not in analysis_storage:
         raise HTTPException(status_code=404, detail="Analysis not found")
-    
+
     analysis = analysis_storage[analysis_id]
-    
+
     if analysis.status != "completed":
         raise HTTPException(status_code=400, detail="Analysis not completed")
-    
+
     # Create temporary file
-    results_file = Path("results") / f"{analysis_id}.json"
-    
+    results_file = Path("outputs/analyses") / f"{analysis_id}.json"
+
     if not results_file.exists():
         # Create file from stored results
         async with aiofiles.open(results_file, 'w') as f:
             await f.write(json.dumps(analysis.results, indent=2))
-    
+
     return FileResponse(
         path=results_file,
         filename=f"design_analysis_{analysis_id}.json",
         media_type="application/json"
     )
+
 
 async def run_analysis(
     analysis_id: str,
@@ -388,7 +397,7 @@ async def run_analysis(
     multi_stage: bool
 ):
     """Background task to run the analysis"""
-    
+
     try:
         # Run the analysis
         results = await analyzer.analyze_website(
@@ -396,7 +405,7 @@ async def run_analysis(
             save_screenshot=save_screenshot,
             include_mobile=include_mobile
         )
-        
+
         # Add metadata
         results["metadata"] = {
             "analysis_id": analysis_id,
@@ -405,22 +414,23 @@ async def run_analysis(
             "include_mobile": include_mobile,
             "tool_version": "1.0.0"
         }
-        
+
         # Update storage
         analysis_storage[analysis_id].status = "completed"
         analysis_storage[analysis_id].completed_at = datetime.now().isoformat()
         analysis_storage[analysis_id].results = results
-        
+
         # Save to file
-        results_file = Path("results") / f"{analysis_id}.json"
+        results_file = Path("outputs/analyses") / f"{analysis_id}.json"
         async with aiofiles.open(results_file, 'w') as f:
             await f.write(json.dumps(results, indent=2))
-        
+
     except Exception as e:
         # Update storage with error
         analysis_storage[analysis_id].status = "failed"
         analysis_storage[analysis_id].error = str(e)
         analysis_storage[analysis_id].completed_at = datetime.now().isoformat()
+
 
 @app.get("/health")
 async def health_check():
@@ -429,25 +439,28 @@ async def health_check():
         Config.validate()
         return {"status": "healthy", "timestamp": datetime.now().isoformat()}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Health check failed: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Health check failed: {str(e)}")
 
 if __name__ == "__main__":
     import argparse
-    
+
     parser = argparse.ArgumentParser(description="Agentic Designer Web App")
     parser.add_argument("--host", default="127.0.0.1", help="Host to bind to")
-    parser.add_argument("--port", type=int, default=8000, help="Port to bind to")
-    parser.add_argument("--reload", action="store_true", help="Enable auto-reload")
-    
+    parser.add_argument("--port", type=int, default=8000,
+                        help="Port to bind to")
+    parser.add_argument("--reload", action="store_true",
+                        help="Enable auto-reload")
+
     args = parser.parse_args()
-    
+
     print("🎨 Starting Agentic Designer Web App...")
     print(f"📡 Server will be available at: http://{args.host}:{args.port}")
     print("💡 Make sure your OPENAI_API_KEY is set in environment variables or .env file")
-    
+
     uvicorn.run(
         "app:app",
         host=args.host,
         port=args.port,
         reload=args.reload
-    ) 
+    )

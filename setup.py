@@ -8,30 +8,37 @@ import sys
 import os
 from pathlib import Path
 
+
 def run_command(command, description):
     """Run a command and handle errors"""
     print(f"🔧 {description}...")
     try:
-        result = subprocess.run(command, shell=True, check=True, capture_output=True, text=True)
+        result = subprocess.run(command, shell=True,
+                                check=True, capture_output=True, text=True)
         print(f"✅ {description} completed successfully")
         return True
     except subprocess.CalledProcessError as e:
         print(f"❌ {description} failed: {e.stderr}")
         return False
 
+
 def check_python_version():
     """Check if Python version is compatible"""
     if sys.version_info < (3, 8):
         print("❌ Python 3.8 or higher is required")
         sys.exit(1)
-    print(f"✅ Python {sys.version_info.major}.{sys.version_info.minor} detected")
+    print(
+        f"✅ Python {sys.version_info.major}.{sys.version_info.minor} detected")
+
 
 def create_directories():
     """Create necessary directories"""
-    directories = ["results", "screenshots", "logs"]
+    directories = ["outputs", "outputs/screenshots", "outputs/analyses", "outputs/variations",
+                   "outputs/stylized", "outputs/components", "outputs/ab_tests", "logs"]
     for directory in directories:
         Path(directory).mkdir(exist_ok=True)
         print(f"📁 Created directory: {directory}")
+
 
 def create_env_file():
     """Create .env file template if it doesn't exist"""
@@ -51,30 +58,31 @@ SCREENSHOT_TIMEOUT=30000
     else:
         print("✅ .env file already exists")
 
+
 def main():
     """Main setup function"""
     print("🎨 Setting up Agentic Designer...")
     print("=" * 50)
-    
+
     # Check Python version
     check_python_version()
-    
+
     # Install Python dependencies
     if not run_command("pip install -r requirements.txt", "Installing Python dependencies"):
         print("❌ Failed to install Python dependencies")
         sys.exit(1)
-    
+
     # Install Playwright browsers
     if not run_command("playwright install chromium", "Installing Playwright browsers"):
         print("❌ Failed to install Playwright browsers")
         sys.exit(1)
-    
+
     # Create directories
     create_directories()
-    
+
     # Create .env file
     create_env_file()
-    
+
     print("\n" + "=" * 50)
     print("🎉 Setup completed successfully!")
     print("\n📋 Next steps:")
@@ -83,5 +91,6 @@ def main():
     print("3. Or use the CLI: python main.py https://example.com")
     print("\n💡 For more information, see the README.md file")
 
+
 if __name__ == "__main__":
-    main() 
+    main()

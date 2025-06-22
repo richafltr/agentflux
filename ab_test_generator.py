@@ -495,9 +495,9 @@ class ABTestGenerator:
             image_bytes = base64.b64decode(image_b64)
 
             # Create variations directory
-            os.makedirs("variations", exist_ok=True)
+            os.makedirs("outputs/variations", exist_ok=True)
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            local_path = f"variations/variation_{timestamp}.png"
+            local_path = f"outputs/variations/variation_{timestamp}.png"
 
             with open(local_path, 'wb') as f:
                 f.write(image_bytes)
@@ -692,7 +692,7 @@ ADDITIONAL QUALITY REQUIREMENTS:
                 image_bytes = base64.b64decode(image_b64)
 
                 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-                improved_path = f"variations/variation_{timestamp}_improved.png"
+                improved_path = f"outputs/variations/variation_{timestamp}_improved.png"
 
                 with open(improved_path, 'wb') as f:
                     f.write(image_bytes)
@@ -729,10 +729,10 @@ ADDITIONAL QUALITY REQUIREMENTS:
 
             # Fallback: look for screenshot files in common locations
             screenshot_files = [
-                "screenshots/www.agentops.ai_.png",
-                "screenshots/segment_1_top.png",
+                "outputs/screenshots/www.agentops.ai_.png",
+                "outputs/screenshots/segment_1_top.png",
                 "segment_1_top.png",
-                "screenshots/segment_2_quarter.png",
+                "outputs/screenshots/segment_2_quarter.png",
                 "segment_2_quarter.png"
             ]
 
@@ -891,9 +891,9 @@ ADDITIONAL QUALITY REQUIREMENTS:
             import base64
             image_bytes = base64.b64decode(image_b64)
 
-            os.makedirs("variations", exist_ok=True)
+            os.makedirs("outputs/variations", exist_ok=True)
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            local_path = f"variations/variation_text_{timestamp}.png"
+            local_path = f"outputs/variations/variation_text_{timestamp}.png"
 
             with open(local_path, 'wb') as f:
                 f.write(image_bytes)

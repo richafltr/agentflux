@@ -9,12 +9,16 @@ import argparse
 import json
 import os
 from pathlib import Path
+import agentops
 from stylizer import VariationStylizer, stylize_from_ab_test_file
 from style_presets import get_all_style_names
 
 
 async def main():
     """Main function for standalone stylization"""
+
+    # Initialize AgentOps
+    agentops.init(tags=["agentflux-stylizer"])
 
     parser = argparse.ArgumentParser(
         description="Apply style presets to existing A/B test variations",
@@ -49,8 +53,8 @@ Examples:
 
     parser.add_argument(
         "--output",
-        default="stylized_variations",
-        help="Output directory for stylized images (default: stylized_variations)"
+        default="outputs/stylized",
+        help="Output directory for stylized images (default: outputs/stylized)"
     )
 
     parser.add_argument(
@@ -117,12 +121,30 @@ Examples:
         )
 
         print("\n✅ Stylization completed successfully!")
-        print(f"📁 All stylized images saved to: {args.output}/")
+        print(
+            f"📁 All stylized images saved to: {os.path.abspath(args.output)}/")
+
+        # List the actual files created
+        print("\n📂 CREATED FILES:")
+        for root, dirs, files in os.walk(args.output):
+            level = root.replace(args.output, '').count(os.sep)
+            indent = ' ' * 2 * level
+            print(f"{indent}{os.path.basename(root)}/")
+            subindent = ' ' * 2 * (level + 1)
+            for file in sorted(files)[:10]:  # Show first 10 files
+                if file.endswith('.png'):
+                    file_path = os.path.join(root, file)
+                    file_size = os.path.getsize(file_path)
+                    print(f"{subindent}✓ {file} ({file_size // 1024}KB)")
+            if len(files) > 10:
+                print(f"{subindent}... and {len(files) - 10} more files")
 
         if not args.no_gallery:
             gallery_path = os.path.join(args.output, "style_gallery.html")
-            print(
-                f"🖼️  View the gallery: file://{os.path.abspath(gallery_path)}")
+            abs_gallery_path = os.path.abspath(gallery_path)
+            print(f"\n🖼️  View the gallery:")
+            print(f"   file://{abs_gallery_path}")
+            print(f"\n   Or run: open {abs_gallery_path}")
 
         return 0
 

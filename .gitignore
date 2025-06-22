@@ -194,18 +194,25 @@ cython_debug/
 .cursorindexingignore
 
 # Project-specific ignores
-# Ignore all files in these directories but keep the directory structure
-enhanced_analysis/**/*
-!enhanced_analysis/**/
-enhanced_analysis_v2/**/*
-!enhanced_analysis_v2/**/
-enhanced_analysis_v3/**/*
-!enhanced_analysis_v3/**/
-generated_images/**/*
-!generated_images/**/
-results/**/*
-!results/**/
-screenshots/**/*
-!screenshots/**/
-variations/**/*
-!variations/**/
+# Generated output directories
+outputs/
+fresh_analysis/
+enhanced_analysis/
+enhanced_analysis_v2/
+enhanced_analysis_v3/
+generated_images/
+results/
+screenshots/
+variations/
+stylized_variations/
+
+# Environment files
+.env.local
+*.env
+
+# macOS
+.DS_Store
+
+# IDE
+.idea/
+.vscode/

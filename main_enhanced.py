@@ -29,7 +29,7 @@ class EnhancedAgentFlux:
         self,
         url: str,
         ab_pattern: Optional[str] = None,
-        output_dir: str = "enhanced_analysis",
+        output_dir: str = "outputs",
         apply_styles: bool = False,
         style_names: Optional[list] = None
     ) -> dict:
@@ -108,13 +108,13 @@ class EnhancedAgentFlux:
                     stylization_results = await self.stylizer.stylize_all_variations(
                         ab_test_package,
                         output_dir=os.path.join(
-                            output_dir, "stylized_variations"),
+                            output_dir, "stylized"),
                         styles_to_apply=style_names
                     )
 
                     # Create style gallery
                     gallery_path = os.path.join(
-                        output_dir, "stylized_variations", "style_gallery.html")
+                        output_dir, "stylized", "style_gallery.html")
                     await self.stylizer.create_style_gallery(stylization_results, gallery_path)
                     print(f"✅ Style gallery created: {gallery_path}")
 
@@ -309,8 +309,8 @@ Examples:
 
     parser.add_argument(
         "--output",
-        default="enhanced_analysis",
-        help="Output directory for analysis results (default: enhanced_analysis)"
+        default="outputs",
+        help="Output directory for analysis results (default: outputs)"
     )
 
     parser.add_argument(
